@@ -1,0 +1,19 @@
+# --- Core ---
+numpy>=1.23
+scipy>=1.10
+librosa>=0.10
+soundfile>=0.12
+pretty_midi>=0.2.10
+tqdm>=4.66
+
+# --- ML ---
+torch
+
+# auf dem windows-rechner:
+# pip install --upgrade pip
+# pip install --index-url https://download.pytorch.org/whl/cpu -r requirements.txt
+
+# auf dem linux-rechner
+# pip install --upgrade pip
+# pip install --index-url https://download.pytorch.org/whl/cu129 -r requirements.txt
+# falls es eine neuere cu12x-Variante gibt, nutze die entsprechend

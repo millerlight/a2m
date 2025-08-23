@@ -38,19 +38,43 @@ Wichtige Eigenschaften / Annahmen
   - Checkpoints nach jeder Epoche (`…epXX.pt`) + bestes Modell (`model.pt`).
   - Kleinere Defaults für `mkdata` (schnelleres Setup).
 
-Glossar (kurz)
---------------
-• CNN: Faltungsnetz, erkennt Muster im Log-Mel-„Bild“ pro Viertel.
-• Log-Mel-Patch: (64 Bänder × 96 Frames) in dB; Eingabeform fürs CNN.
-• Augmentations: Gain, leichter Tilt-EQ, Rauschen, kleiner Time-Stretch.
-• REST: 13. Klasse „Stille“, wird beim MIDI-Schreiben ausgelassen.
-• Checkpoint: gespeicherte Gewichte; hier pro Epoche + bestes Modell.
+---------------------------
+WICHTIGE BEGRIFFE (einfach):
+---------------------------
 
-NPZ-Format
-----------
-X: (N,1,64,96) float32  – Log-Mel-Patches pro Viertel
-y: (N,)       int64     – 0..11 Ton (base_midi+offset), 12 = REST
-meta: {"bpm":..., "base_midi":..., "sr":...}
+• CNN (Convolutional Neural Network)
+  = Ein neuronales Netz, das mit kleinen Filtern über ein „Bild“ fährt
+    und Muster erkennt. Unser „Bild“ ist ein Zeit-Frequenz-Bild des Tons.
+
+• Log-Mel-Patch
+  = Ein kleiner Ausschnitt eines Spektrogramms pro Viertel (z. B. 64
+    Frequenzbänder × 96 Zeit-"Pixel"). „Mel“ ist eine Skala ähnlich
+    unserem Gehör, „Log“ = Lautstärke als dB.
+
+• Augmentations
+  = Zufällige Mini-Veränderungen beim Training (z. B. Lautstärke,
+    leichtes Rauschen, minimaler Zeit-Stretch), damit das Modell
+    robust wird und nicht nur einen einzigen Synth-Sound „kennt“.
+
+• Blip
+  = Ein sehr kurzer, ungewollter Ton am Viertelanfang/-ende (z. B.
+    durch Legato/Overlap). Unsere Labels kommen aus der Mitte des
+    Viertels – so ignorieren wir diese Blips im Ziel und vermeiden
+    doppelte Noten.
+
+---------------------------
+AUFGABE / LABELS:
+---------------------------
+
+• Wir beschränken uns auf eine Oktave: 12 Töne + REST (=Stille)
+  → zusammen 13 Klassen.
+
+• Jede Audio-Scheibe ist genau ein Viertel lang (60/BPM Sekunden).
+  Für jede dieser Scheiben berechnen wir ein Log-Mel-Patch und lassen
+  das CNN eine Klasse vorhersagen (welcher Ton oder REST).
+
+• Label-Regel: Nimm die Note, die die Mitte des Viertels überdeckt.
+  Das verhindert doppelte Labels, selbst wenn am Rand Blips/Legato sind.
 
 Beispiel-Aufrufe
 ----------------
@@ -344,8 +368,8 @@ def train_model(data_npz, out_pt, epochs=15, batch=128, lr=1e-3,
 
             # Epochen-Checkpoint
             ck = out_pt.replace(".pt", f".ep{ep:02d}.pt")
-            torch.save(model.state_dict(), ck)
-            p(f"[train] checkpoint saved: {ck}")
+            #torch.save(model.state_dict(), ck)
+            #p(f"[train] checkpoint saved: {ck}")
 
             # Bestes Modell
             if va_acc > best_acc:
